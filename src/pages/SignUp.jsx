@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import axiosInstance from '../service/api'
 
 function SignUp() {
   const navigate = useNavigate()
@@ -10,25 +11,58 @@ function SignUp() {
     mobileNumber: '',
   })
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null) 
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    setError(null);
     setFormData(prev => ({
       ...prev,
       [name]: value
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    localStorage.setItem('signupEmail', formData.email)
-    navigate('/otp-verification')
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response = await axiosInstance.post('/auth/user/register', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        mobileNumber: formData.mobileNumber,
+      });
+
+      // Assuming a successful response structure
+      if (response.status === 200 || response.data.success) {
+        console.log('Signup Successful:', response.data);
+        
+        // Save email to localStorage for the next step (OTP verification)
+        localStorage.setItem('signupEmail', formData.email); 
+        
+        // 3. Navigate after successful API call
+        navigate('/otp-verification');
+      } else {
+        // Handle unexpected successful status, if necessary
+        setError('Signup failed. Please try again.');
+      }
+    } catch (err) {
+      // 4. Handle API errors (e.g., validation, network issues)
+      console.error('Signup Error:', err);
+      // Use the error message from the API response, or a default one
+      setError(err.response?.data?.message || 'An error occurred during sign up. Please check your network.');
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[85vh] w-full bg-gradient-to-br from-teal-400 via-emerald-400 to-cyan-400 px-4 sm:px-6 py-10 relative overflow-hidden">
+    <div className="flex items-center justify-center min-h-[100vh] w-full bg-gradient-to-br from-teal-400 via-emerald-400 to-cyan-400 px-4 sm:px-6 py-10 relative overflow-hidden">
       
-      {/* Floating blurred circles */}
+      {/* Floating blurred circles (Omitted for brevity) */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 -left-20 w-96 h-96 bg-emerald-400/30 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute top-1/2 -right-20 w-96 h-96 bg-teal-400/25 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -38,7 +72,7 @@ function SignUp() {
       {/* Main Card */}
       <div className="relative z-10 w-full max-w-5xl bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden grid md:grid-cols-2 transition-all duration-300 border border-white/20">
         
-        {/* LEFT SIDE - Welcome Section */}
+        {/* LEFT SIDE - Welcome Section (Omitted for brevity) */}
         <div className="bg-gradient-to-br from-teal-500 via-emerald-500 to-cyan-500 text-white flex flex-col justify-center items-center p-10 md:p-14 relative overflow-hidden">
           <div className="absolute top-10 left-10 w-24 h-24 bg-white/10 rounded-full"></div>
           <div className="absolute bottom-20 right-10 w-32 h-32 bg-white/10 rounded-full"></div>
@@ -84,8 +118,8 @@ function SignUp() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            
-            {/* Name Field */}
+            {/* Form Fields (Name, Email, Password, Mobile) - remain the same */}
+            {/* ... (Your existing form field code for Name) ... */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
               <input
@@ -99,8 +133,7 @@ function SignUp() {
                 className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:ring-2 focus:ring-teal-400 outline-none transition-all text-gray-600"
               />
             </div>
-
-            {/* Email Field */}
+            {/* ... (Your existing form field code for Email) ... */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
@@ -114,8 +147,7 @@ function SignUp() {
                 className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:ring-2 focus:ring-teal-400 outline-none transition-all text-gray-800"
               />
             </div>
-
-            {/* Password Field */}
+            {/* ... (Your existing form field code for Password) ... */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <div className="relative">
@@ -147,8 +179,7 @@ function SignUp() {
                 </button>
               </div>
             </div>
-
-            {/* Mobile Field */}
+            {/* ... (Your existing form field code for Mobile) ... */}
             <div>
               <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700 mb-2">
                 Mobile (Optional)
@@ -163,17 +194,29 @@ function SignUp() {
                 className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:ring-2 focus:ring-teal-400 outline-none transition-all text-gray-800"
               />
             </div>
+            
+            {/* Error Message */}
+            {error && (
+              <p className="text-red-500 text-sm font-medium text-center">{error}</p>
+            )}
 
-            {/* Submit */}
+            {/* Submit Button */}
             <button
               type="submit"
-              className="w-full py-3 rounded-full bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 text-white font-semibold hover:from-teal-600 hover:via-emerald-600 hover:to-cyan-600 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl"
+              // Disable button while loading
+              disabled={loading} 
+              className={`w-full py-3 rounded-full text-white font-semibold transition-all duration-200 shadow-lg ${
+                loading
+                  ? 'bg-gray-400 cursor-not-allowed' // Style when loading
+                  : 'bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 hover:from-teal-600 hover:via-emerald-600 hover:to-cyan-600 transform hover:scale-[1.02] hover:shadow-xl'
+              }`}
             >
-              Sign Up
+              {/* Show loading text/spinner */}
+              {loading ? 'Processing...' : 'Sign Up'} 
             </button>
           </form>
 
-          {/* Sign In Link */}
+          {/* Sign In Link (Omitted for brevity) */}
           <div className="mt-4 text-center">
             <p className="text-gray-500 text-sm md:text-sm">
               Already have an account?{' '}
