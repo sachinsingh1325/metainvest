@@ -21,41 +21,73 @@ function SignUp() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    // Store email in localStorage to pass to OTP page
     localStorage.setItem('signupEmail', formData.email)
-    // Redirect to OTP verification page
     navigate('/otp-verification')
   }
 
   return (
-    <div className="min-h-screen green-gradient-bg flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated water waves background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-20 -left-20 w-96 h-96 bg-emerald-300/20 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute top-1/2 -right-20 w-96 h-96 bg-teal-300/20 rounded-full blur-3xl animate-wave" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute -bottom-20 left-1/3 w-96 h-96 bg-green-300/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
-      </div>
+    <div className="flex items-center justify-center min-h-[85vh] w-full bg-gradient-to-br from-teal-400 via-emerald-400 to-cyan-400 px-4 sm:px-6 py-10 relative overflow-hidden">
       
-      <div className="relative z-10 w-full max-w-md animate-slide-up">
-        <Link 
-          to="/signin" 
-          className="text-white hover:text-green-100 mb-4 inline-block text-sm transition-colors font-medium drop-shadow-lg"
-        >
-          ← Home page
-        </Link>
+      {/* Floating blurred circles */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-20 -left-20 w-96 h-96 bg-emerald-400/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/2 -right-20 w-96 h-96 bg-teal-400/25 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute -bottom-20 left-1/3 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
+      </div>
 
-        <div className="watermorphism p-6 sm:p-8 shadow-2xl">
+      {/* Main Card */}
+      <div className="relative z-10 w-full max-w-5xl bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden grid md:grid-cols-2 transition-all duration-300 border border-white/20">
+        
+        {/* LEFT SIDE - Welcome Section */}
+        <div className="bg-gradient-to-br from-teal-500 via-emerald-500 to-cyan-500 text-white flex flex-col justify-center items-center p-10 md:p-14 relative overflow-hidden">
+          <div className="absolute top-10 left-10 w-24 h-24 bg-white/10 rounded-full"></div>
+          <div className="absolute bottom-20 right-10 w-32 h-32 bg-white/10 rounded-full"></div>
+          <div className="absolute top-1/2 left-5 w-16 h-16 bg-white/10 rounded-full"></div>
+
+          <div className="text-center relative z-10">
+            <div className="mb-8 flex items-center justify-center gap-2">
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
+              <span className="text-xl font-bold">Metawealthprime</span>
+            </div>
+
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Join the Family!</h2>
+            <p className="text-white/90 mb-10 text-base md:text-lg leading-relaxed">
+              Create your account and start<br /> your journey with us today.
+            </p>
+            <button
+              onClick={() => navigate('/signin')}
+              className="inline-block border-2 border-white rounded-full px-10 py-3 font-semibold hover:bg-white hover:text-teal-500 transition-all duration-300 transform hover:scale-105"
+            >
+              SIGN IN
+            </button>
+          </div>
+        </div>
+
+        {/* RIGHT SIDE - Sign Up Form */}
+        <div className="p-8 sm:p-8 md:p-10 bg-white flex flex-col justify-center relative">
+          <Link 
+            to="/" 
+            className="text-teal-500 hover:text-teal-600 text-sm font-medium absolute top-5 left-5 transition-colors"
+          >
+            ← Home
+          </Link>
+
           <div className="text-center mb-6">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Create Account</h1>
-            <p className="text-gray-600 text-sm sm:text-base">Join us today! Fill in your details to get started.</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-teal-500 mb-1">Create Account</h1>
+            <p className="text-gray-500 text-sm md:text-sm">
+              Fill your details to get started
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            
             {/* Name Field */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Name
-              </label>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
               <input
                 type="text"
                 id="name"
@@ -63,16 +95,14 @@ function SignUp() {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                placeholder="Enter your Name"
-                className="watermorphism-input w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-transparent outline-none transition-all duration-200 text-gray-800 placeholder-gray-500"
+                placeholder="Enter your name"
+                className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:ring-2 focus:ring-teal-400 outline-none transition-all text-gray-600"
               />
             </div>
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email <span className="text-red-500">*</span>
-              </label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
                 type="email"
                 id="email"
@@ -81,15 +111,13 @@ function SignUp() {
                 onChange={handleChange}
                 required
                 placeholder="Enter your Email"
-                className="watermorphism-input w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-transparent outline-none transition-all duration-200 text-gray-800 placeholder-gray-500"
+                className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:ring-2 focus:ring-teal-400 outline-none transition-all text-gray-800"
               />
             </div>
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -99,16 +127,16 @@ function SignUp() {
                   onChange={handleChange}
                   required
                   placeholder="Enter Password"
-                  className="watermorphism-input w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-transparent outline-none transition-all duration-200 text-gray-800 placeholder-gray-500 pr-12"
+                  className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:ring-2 focus:ring-teal-400 outline-none transition-all text-gray-800 pr-12"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-emerald-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-teal-500 transition-colors"
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.29 3.29m0 0L3 3m3.29 3.29L3 3m13.561 13.561A10.05 10.05 0 0121 12c0-4.478-2.943-8.268-7-9.543a9.97 9.97 0 00-3.029 1.563m5.858.908a3 3 0 014.243 4.243m-4.242 4.242L9.88 9.88m0 0L3 3m6.88 6.88l3.29 3.29M21 21l-3.29-3.29m0 0L21 21m-3.29-3.29L21 21" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242" />
                     </svg>
                   ) : (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,10 +148,10 @@ function SignUp() {
               </div>
             </div>
 
-            {/* Mobile Number Field (Optional) */}
+            {/* Mobile Field */}
             <div>
               <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                Mobile Number <span className="text-gray-400 text-xs">(Optional)</span>
+                Mobile (Optional)
               </label>
               <input
                 type="tel"
@@ -132,25 +160,24 @@ function SignUp() {
                 value={formData.mobileNumber}
                 onChange={handleChange}
                 placeholder="Enter Mobile Number"
-                className="watermorphism-input w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-transparent outline-none transition-all duration-200 text-gray-800 placeholder-gray-500"
+                className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:ring-2 focus:ring-teal-400 outline-none transition-all text-gray-800"
               />
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <button
               type="submit"
-              className="w-full py-3 rounded-lg bg-gradient-to-r from-emerald-500 via-teal-500 to-green-500 text-white font-semibold hover:from-emerald-600 hover:via-teal-600 hover:to-green-600 transform hover:scale-[1.02] transition-all duration-200 shadow-lg shadow-emerald-500/40 relative overflow-hidden group"
+              className="w-full py-3 rounded-full bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 text-white font-semibold hover:from-teal-600 hover:via-emerald-600 hover:to-cyan-600 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              <span className="relative z-10">Sign Up</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity animate-shimmer"></div>
+              Sign Up
             </button>
           </form>
 
           {/* Sign In Link */}
-          <div className="mt-6 text-center">
-            <p className="text-gray-600 text-sm sm:text-base">
+          <div className="mt-4 text-center">
+            <p className="text-gray-500 text-sm md:text-sm">
               Already have an account?{' '}
-              <Link to="/signin" className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+              <Link to="/signin" className="text-teal-500 hover:text-teal-600 font-semibold transition-colors">
                 Sign in
               </Link>
             </p>
@@ -162,4 +189,3 @@ function SignUp() {
 }
 
 export default SignUp
-
