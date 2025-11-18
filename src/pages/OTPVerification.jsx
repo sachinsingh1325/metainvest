@@ -87,7 +87,7 @@ function OTPVerification() {
 
       if (response.status === 200) {
         localStorage.removeItem('signupEmail');
-        navigate('/dashboard');
+        navigate('/signin');
       }
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Verification failed. Please check the code.';

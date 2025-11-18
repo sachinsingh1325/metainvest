@@ -21,27 +21,53 @@ function SignIn() {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
 
     try {
-      const response = await axiosInstance.post('/auth/user/login', formData)
-      console.log('this is login response data',response.data.user)
+      const response = await axiosInstance.post('/auth/user/login', formData);
+
       if (response.status === 200) {
-        const { token,user } = response.data
-        localStorage.setItem('token', token)
-         localStorage.setItem("user", JSON.stringify(user));
-        navigate('/dashboard')
+        // Login Successful: Navigate to dashboard
+        const { token, user } = response.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        navigate('/dashboard');
+      } else if (response.data?.status === 'success') {
+        // When status is explicitly "success": treat as OTP route trigger
+        localStorage.setItem('signupEmail', formData.email);
+        navigate('/otp-verification');
       }
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || 'Login failed. Please check your credentials.'
-      setError(errorMessage)
+      console.log('this is rep',err.response.status)
+      if (err.response?.status === 403) {
+        // Resend OTP logic
+        try {
+          const email = formData.email;
+          const resendResponse = await axiosInstance.post('/auth/user/resend-otp', { email });
+          if (resendResponse.status === 200) {
+            console.log('this is otp',resendResponse.data)
+            localStorage.setItem('signupEmail', email);
+            navigate('/otp-verification');
+          } else {
+            setError('Could not resend OTP. Please try again.');
+          }
+        } catch (resendErr) {
+          setError(
+            resendErr.response?.data?.message ||
+              'Could not resend OTP. Please try again.'
+          );
+        }
+      } else {
+        const errorMessage =
+          err.response?.data?.message || 'Login failed. Please check your credentials.';
+        setError(errorMessage);
+      }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-[100vh] w-full bg-gradient-to-br from-green-300 via-emerald-300 to-cyan-200 px-4 sm:px-6 py-8">
