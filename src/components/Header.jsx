@@ -7,14 +7,13 @@ import {
   FiSettings,
   FiLogOut,
 } from "react-icons/fi";
-import { GiWaterRecycling } from "react-icons/gi";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Header = ({ toggleSidebar, isSidebarOpen }) => {
   const navigate = useNavigate();
+  
   const [showUserPanel, setShowUserPanel] = useState(false);
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const toggleUserPanel = () => {
     setShowUserPanel(!showUserPanel);
@@ -22,122 +21,125 @@ const Header = ({ toggleSidebar, isSidebarOpen }) => {
 
   const handleLogout = () => {
     localStorage.removeItem("retent_user");
+    localStorage.removeItem("user"); // optional: clear user too
     navigate("/");
     setShowUserPanel(false);
   };
 
   return (
-    <header className="static top-0 z-50 w-full border-b border-gray-200 bg-gradient-to-b from-white via-white to-white shadow-sm">
-      <div className="px-4 py-3 lg:px-6 lg:pl-4">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-gray-200 bg-white shadow-sm">
+      <div className="px-4 py-2 lg:px-6">
         <div className="flex items-center justify-between">
-          {/* Left Section */}
-          <div className="flex items-center justify-start">
-            {/* Hamburger Menu - Only visible on mobile */}
+
+          {/* ==================== LEFT: Logo (Always Visible) + Hamburger ==================== */}
+          <div className="flex items-center gap-3">
+            {/* Hamburger - Mobile only */}
             <button
               onClick={toggleSidebar}
-              className="lg:hidden mr-3 cursor-pointer p-2.5 hover:bg-gray-100 focus:bg-gray-100 focus:ring-2 focus:ring-gray-100 rounded-xl transition-all duration-200"
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition"
             >
               {isSidebarOpen ? (
-                <FiX className="w-5 h-5 text-gray-600" />
+                <FiX className="w-6 h-6 text-gray-700" />
               ) : (
-                <FiMenu className="w-5 h-5 text-gray-600" />
+                <FiMenu className="w-6 h-6 text-gray-700" />
               )}
             </button>
-            
-            {/* Sidebar Branding - Hidden on mobile, shown on desktop */}
-            <div className="hidden lg:flex items-center gap-2 mr-6">
-              <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-sm">
-                <GiWaterRecycling className="w-4 h-4 text-white" />
+
+            {/* Logo + Brand Name - Visible on ALL screens */}
+            <Link to="/dashboard" className="flex items-center gap-2">
+              <div className="p-1.5 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg shadow-sm">
+                <img
+                  src="/logo1.png"
+                  alt="MetaWealth Logo"
+                  className="w-9 h-9 sm:w-10 sm:h-10 object-contain"
+                />
               </div>
-              <div>
-                <h1 className="font-bold text-base bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+
+              {/* Text hidden on very small screens, visible from sm (~640px) upwards */}
+              <div className="hidden sm:block">
+                <h1 className="text-lg font-bold bg-gradient-to-r from-green-800 to-emerald-800 bg-clip-text text-transparent">
                   MetaWealth
                 </h1>
-                <p className="text-xs text-gray-500">Sustainable Living</p>
+                <p className="text-xs text-gray-500 -mt-0.5">Sustainable Living</p>
               </div>
-            </div>
+            </Link>
           </div>
 
-          {/* Right Section - User Info & Icons */}
+          {/* ==================== RIGHT: User Info & Avatar ==================== */}
           <div className="flex items-center gap-4">
-            {/* User Info - Eco Warrior & Status */}
-            <div className="hidden md:flex items-center gap-3 p-2 bg-white/50 rounded-xl border border-green-100">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-sm border border-white">
+
+            {/* Eco Warrior Badge - Hidden on very small screens */}
+            <div className="hidden md:flex items-center gap-3 p-2 bg-white/60 backdrop-blur rounded-xl border border-green-100">
+              <div className="w-9 h-9 h-9 rounded-lg bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-sm">
                 <span className="text-white font-bold text-xs">EW</span>
               </div>
-              <div className="flex flex-col">
-                <span className="font-semibold text-gray-800 text-sm">Eco Warrior</span>
-                <div className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-green-600">Active</span>
+              <div>
+                <p className="font-semibold text-gray-800 text-sm">Eco Warrior</p>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-green-600 font-medium">Active</span>
                 </div>
               </div>
             </div>
 
-            {/* User Panel */}
+            {/* User Avatar & Dropdown */}
             <div className="relative">
-              <div
+              <button
                 onClick={toggleUserPanel}
-                className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 cursor-pointer hover:border-green-300 hover:ring-2 hover:ring-green-100 transition-all duration-200 flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50"
+                className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 hover:border-green-400 hover:ring-4 hover:ring-green-100 transition-all duration-300 flex items-center justify-center bg-gradient-to-br from-green-100 to-emerald-100"
               >
-                {/* Fallback avatar if image fails to load */}
-                <div className="w-full h-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm">
-                  {user?.user?.name ? user.user.name.charAt(0).toUpperCase() : 'U'}
+                <div className="w-full h-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center items-center text-white font-bold text-lg">
+                  {user?.user?.name ? user.user.name.charAt(0).toUpperCase() : "U"}
                 </div>
-              </div>
+              </button>
 
-              {/* User Dropdown Panel */}
+              {/* Dropdown Panel */}
               {showUserPanel && (
-                <div className="absolute right-0 mt-2 w-64 rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 transform transition-all duration-200 ease-in-out scale-100 bg-white">
-                  
-                  {/* User Details Section */}
-                  <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-green-50/50 to-emerald-50/50">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-semibold text-lg">
-                        {user?.user?.name ? user.user.name.charAt(0).toUpperCase() : 'U'}
+                <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50">
+                  {/* User Info Header */}
+                  <div className="px-6 py-5 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-100">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                        {user?.user?.name ? user.user.name.charAt(0).toUpperCase() : "U"}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
-                          {user?.user?.name || 'Eco Warrior'}
+                      <div className="overflow-hidden">
+                        <p className="font-semibold text-gray-900 truncate">
+                          {user?.user?.name || "Eco Warrior"}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">
-                          {user?.user?.email || 'Active User'}
+                        <p className="text-sm text-gray-500 truncate">
+                          {user?.user?.email || "user@example.com"}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Navigation Options */}
+                  {/* Menu Items */}
                   <div className="py-2">
                     <Link
                       to="/settings/profile"
                       onClick={() => setShowUserPanel(false)}
-                      className="flex items-center px-5 py-1 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 transition-all duration-200 group"
+                      className="flex items-center gap-4 px-6 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center mr-3 group-hover:bg-green-200 transition-colors duration-200">
-                        <FiUser className="w-4 h-4 text-green-600" />
-                      </div>
+                      <FiUser className="w-5 h-5" />
                       <span className="font-medium">Profile</span>
                     </Link>
 
                     <Link
                       to="/settings"
                       onClick={() => setShowUserPanel(false)}
-                      className="flex items-center px-5 py-1 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-all duration-200 group"
+                      className="flex items-center gap-4 px-6 py-3 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center mr-3 group-hover:bg-emerald-200 transition-colors duration-200">
-                        <FiSettings className="w-4 h-4 text-emerald-600" />
-                      </div>
+                      <FiSettings className="w-5 h-5" />
                       <span className="font-medium">Settings</span>
                     </Link>
 
+                    <hr className="mx-4 my-2 border-gray-200" />
+
                     <button
                       onClick={handleLogout}
-                      className="flex items-center w-full px-5 py-1 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200 group"
+                      className="w-full flex items-center gap-4 px-6 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 transition"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center mr-3 group-hover:bg-red-200 transition-colors duration-200">
-                        <FiLogOut className="w-4 h-4 text-red-600" />
-                      </div>
+                      <FiLogOut className="w-5 h-5" />
                       <span className="font-medium">Logout</span>
                     </button>
                   </div>

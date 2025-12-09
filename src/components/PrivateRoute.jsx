@@ -37,6 +37,7 @@ const PrivateRoute = () => {
   }
 
   if (!isAuthenticated) {
+    localStorage.removeItem('token');
     return <Navigate to="/" replace />;
   }
 

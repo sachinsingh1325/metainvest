@@ -32,7 +32,7 @@ const Layout = () => {
       <div className="flex flex-col flex-1 w-full">
         <Header toggleSidebar={toggleSidebar} isSidebarOpen={sidebarOpen} />
         <main className="h-full overflow-y-auto">
-          <div className={`p-0 ${isMobile ? '' : 'lg:ml-64'}`}>
+          <div className={`p-0 ${isMobile ? '' : 'lg:ml-[220px]'}`}>
             <div className="p-0">
               <Outlet /> 
             </div>
