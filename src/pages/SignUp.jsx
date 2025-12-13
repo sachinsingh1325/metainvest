@@ -9,6 +9,7 @@ function SignUp() {
     email: '',
     password: '',
     mobileNumber: '',
+    referralCode: '',
   })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -34,6 +35,7 @@ function SignUp() {
         email: formData.email,
         password: formData.password,
         mobileNumber: formData.mobileNumber,
+        referralCode: formData.referralCode, // Added referral code to API call
       });
 
       // Assuming a successful response structure
@@ -118,8 +120,7 @@ function SignUp() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Form Fields (Name, Email, Password, Mobile) - remain the same */}
-            {/* ... (Your existing form field code for Name) ... */}
+            {/* Name Field */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
               <input
@@ -133,7 +134,8 @@ function SignUp() {
                 className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:ring-2 focus:ring-teal-400 outline-none transition-all text-gray-600"
               />
             </div>
-            {/* ... (Your existing form field code for Email) ... */}
+            
+            {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <input
@@ -147,7 +149,8 @@ function SignUp() {
                 className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:ring-2 focus:ring-teal-400 outline-none transition-all text-gray-800"
               />
             </div>
-            {/* ... (Your existing form field code for Password) ... */}
+            
+            {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
               <div className="relative">
@@ -179,7 +182,8 @@ function SignUp() {
                 </button>
               </div>
             </div>
-            {/* ... (Your existing form field code for Mobile) ... */}
+            
+            {/* Mobile Field */}
             <div>
               <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700 mb-2">
                 Mobile (Optional)
@@ -195,6 +199,25 @@ function SignUp() {
               />
             </div>
             
+            {/* Referral Code Field - New Addition */}
+            <div>
+              <label htmlFor="referralCode" className="block text-sm font-medium text-gray-700 mb-2">
+                Referral Code (Optional)
+              </label>
+              <input
+                type="text"
+                id="referralCode"
+                name="referralCode"
+                value={formData.referralCode}
+                onChange={handleChange}
+                placeholder="Enter referral code if you have one"
+                className="w-full px-3 py-2 bg-gray-50 rounded-lg focus:ring-2 focus:ring-teal-400 outline-none transition-all text-gray-800"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                If someone referred you, enter their code here
+              </p>
+            </div>
+            
             {/* Error Message */}
             {error && (
               <p className="text-red-500 text-sm font-medium text-center">{error}</p>
@@ -203,20 +226,18 @@ function SignUp() {
             {/* Submit Button */}
             <button
               type="submit"
-              // Disable button while loading
               disabled={loading} 
               className={`w-full py-3 rounded-full text-white font-semibold transition-all duration-200 shadow-lg ${
                 loading
-                  ? 'bg-gray-400 cursor-not-allowed' // Style when loading
+                  ? 'bg-gray-400 cursor-not-allowed'
                   : 'bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 hover:from-teal-600 hover:via-emerald-600 hover:to-cyan-600 transform hover:scale-[1.02] hover:shadow-xl'
               }`}
             >
-              {/* Show loading text/spinner */}
               {loading ? 'Processing...' : 'Sign Up'} 
             </button>
           </form>
 
-          {/* Sign In Link (Omitted for brevity) */}
+          {/* Sign In Link */}
           <div className="mt-4 text-center">
             <p className="text-gray-500 text-sm md:text-sm">
               Already have an account?{' '}

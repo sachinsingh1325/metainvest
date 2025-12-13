@@ -24,8 +24,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   const menuItems = [
     { to: "/dashboard", label: "Eco Dashboard", icon: FiPieChart },
-    { to: "/recycling-stats", label: "Impact Analytics", icon: FiTrendingUp },
-    { to: "/waste-tracking", label: "Waste Journey", icon: FiTruck },
+    { to: "/impactAnalyticsPage", label: "Impact Analytics", icon: FiTrendingUp },
+    { to: "/wasteJourneyPage", label: "Waste Journey", icon: FiTruck },
     { to: "/eco-store", label: "Green Marketplace", icon: FiShoppingBag },
     { to: "/achievements", label: "Eco Badges", icon: FiAward },
   ];
@@ -60,7 +60,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
       {/* Slim sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 w-45 h-screen bg-gradient-to-b from-white via-green-50/20 to-emerald-50/10 backdrop-blur-sm border-r border-green-100/50 transition-all duration-500 ease-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 w-450 h-screen bg-gradient-to-b from-white via-green-50/20 to-emerald-50/10 backdrop-blur-sm border-r border-green-100/50 transition-all duration-500 ease-out lg:translate-x-0 ${
           isOpen ? "translate-x-0 shadow-xl" : "-translate-x-full"
         }`}
       >

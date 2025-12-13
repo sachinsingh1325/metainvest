@@ -6,6 +6,9 @@ import Dashboard from './pages/Dashboard'
 import PrivateRoute from './components/PrivateRoute'
 import PublicRoute from './components/PublicRoute'
 import Layout from './components/Layout'
+import ImpactAnalyticsPage from './pages/ImpactAnalyticsPage'
+import WasteJourneyPage from './pages/WasteJourneyPage'
+
 
 function App() {
   return (
@@ -21,6 +24,10 @@ function App() {
         <Route element={<PrivateRoute />}>
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/impactAnalyticsPage" element={<ImpactAnalyticsPage />} />
+          <Route path="/wasteJourneyPage" element={<WasteJourneyPage />} />
+
+
           </Route>
         </Route>
       </Routes>
