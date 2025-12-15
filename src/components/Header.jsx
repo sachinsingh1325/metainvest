@@ -70,7 +70,7 @@ const Header = ({ toggleSidebar, isSidebarOpen }) => {
 
             {/* Eco Warrior Badge - Hidden on very small screens */}
             <div className="hidden md:flex items-center gap-3 p-2 bg-white/60 backdrop-blur rounded-xl border border-green-100">
-              <div className="w-9 h-9 h-9 rounded-lg bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-sm">
+              <div className="w-9 h-9  rounded-lg bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-sm">
                 <span className="text-white font-bold text-xs">EW</span>
               </div>
               <div>
