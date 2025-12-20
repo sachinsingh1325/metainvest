@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import axiosInstance from '../service/api'
+import { useSearchParams } from "react-router-dom"
 
 function SignUp() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,6 +16,18 @@ function SignUp() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null) 
+
+  useEffect(() => {
+    const ref = searchParams.get("ref")
+    console.log("this is refferal code",ref)
+    if (ref) {
+      // setReferralCode(ref)
+    setFormData(prev => ({
+      ...prev,
+      referralCode: ref
+    }))
+    }
+  }, [searchParams])
 
   const handleChange = (e) => {
     const { name, value } = e.target

@@ -8,14 +8,15 @@ import PublicRoute from './components/PublicRoute'
 import Layout from './components/Layout'
 import ImpactAnalyticsPage from './pages/ImpactAnalyticsPage'
 import WasteJourneyPage from './pages/WasteJourneyPage'
-
+import toast, { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
+    <>
+    <Toaster />
     <Router>
       <Routes>
         <Route element={<PublicRoute />}>
-
           <Route path="/" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/signin" element={<SignIn />} />
@@ -32,6 +33,7 @@ function App() {
         </Route>
       </Routes>
     </Router>
+    </>
   )
 }
 

@@ -20,6 +20,7 @@ import { GiRecycle, GiTreeRoots, GiPineTree } from 'react-icons/gi';
 import { QRCodeSVG } from 'qrcode.react';
 import { FaLeaf } from "react-icons/fa6";
 import { IoIosLeaf } from "react-icons/io";
+import toast from 'react-hot-toast';
 
 const Dashboard = () => {
   const [activePlan, setActivePlan] = useState(null);
@@ -937,12 +938,12 @@ const Dashboard = () => {
                           <p className="text-xs text-gray-500 mb-1">Your Referral Link</p>
                           <div className="flex items-center gap-2">
                             <div className="flex-1 px-3 py-2 bg-white border border-emerald-200 rounded-lg text-xs truncate font-mono">
-                              https://eco-invest.com/ref/{dashboardData.userStats.userId}
+                            {`${window.location.origin}/signup?ref=${dashboardData.userStats.userId}`}
                             </div>
                             <button
                               onClick={() => {
-                                navigator.clipboard.writeText(`https://eco-invest.com/ref/${dashboardData.userStats.userId}`);
-                                alert('Referral link copied to clipboard!');
+                                navigator.clipboard.writeText(`${window.location.origin}/signup?ref=${dashboardData.userStats.userId}`);
+                                toast.success('Referral link copied to clipboard!');
                               }}
                               className="p-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 flex items-center gap-1"
                             >
@@ -972,9 +973,23 @@ const Dashboard = () => {
                       </div>
                       
                       <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(`https://eco-invest.com/ref/${dashboardData.userStats.userId}`);
-                          alert('Referral link copied to clipboard!');
+                        onClick={async () => {
+                          const referralUrl = `${window.location.origin}/signup?ref=${dashboardData.userStats.userId}`;
+                          if (navigator.share) {
+                            try {
+                              await navigator.share({
+                                title: "Join Eco Investment Platform",
+                                text: "Register using my referral link and start your green journey:",
+                                url: referralUrl,
+                              });
+                            } catch (error) {
+                              // optional: handle user cancel or error
+                            }
+                          } else {
+                            // fallback to copy to clipboard
+                            navigator.clipboard.writeText(referralUrl);
+                            alert('Referral link copied to clipboard!');
+                          }
                         }}
                         className="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-bold hover:shadow-lg transition-all duration-300 hover:scale-[1.02] text-sm flex items-center justify-center gap-2"
                       >

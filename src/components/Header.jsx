@@ -20,8 +20,9 @@ const Header = ({ toggleSidebar, isSidebarOpen }) => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("retent_user");
-    localStorage.removeItem("user"); // optional: clear user too
+    console.log("logout");
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
     navigate("/");
     setShowUserPanel(false);
   };
@@ -31,7 +32,6 @@ const Header = ({ toggleSidebar, isSidebarOpen }) => {
       <div className="px-4 py-2 lg:px-6">
         <div className="flex items-center justify-between">
 
-          {/* ==================== LEFT: Logo (Always Visible) + Hamburger ==================== */}
           <div className="flex items-center gap-3">
             {/* Hamburger - Mobile only */}
             <button
