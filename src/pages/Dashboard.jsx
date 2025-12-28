@@ -2,28 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { 
   FiTrendingUp, 
   FiUsers, 
-  FiAward, 
-  FiCalendar,
-  FiDollarSign,
-  FiBarChart2,
-  FiStar,
-  FiZap,
-  FiShoppingCart,
-  FiCreditCard,
-  FiCheck,
-  FiX,
-  FiCopy,
   FiInfo,
-  FiChevronRight
-  } from 'react-icons/fi';
+  FiShare,
+  FiDollarSign
+} from 'react-icons/fi';
 import { GiRecycle, GiTreeRoots, GiPineTree } from 'react-icons/gi';
-import { QRCodeSVG } from 'qrcode.react';
 import { FaLeaf } from "react-icons/fa6";
 import { IoIosLeaf } from "react-icons/io";
 import toast from 'react-hot-toast';
+import axiosInstance from '../service/api';
+
+import StatsCard from '../components/dashboard/StatsCard';
+import PlanCard from '../components/dashboard/PlanCard';
+import CarbonPackCard from '../components/dashboard/CarbonPackCard';
+import InvestmentPopup from '../components/dashboard/InvestmentPopup';
+import CarbonPopup from '../components/dashboard/CarbonPopup';
 
 const Dashboard = () => {
-  const [activePlan, setActivePlan] = useState(null);
   const [selectedCarbonPack, setSelectedCarbonPack] = useState(null);
   const [showInvestmentPopup, setShowInvestmentPopup] = useState(false);
   const [showCarbonPopup, setShowCarbonPopup] = useState(false);
@@ -31,6 +26,26 @@ const Dashboard = () => {
   const [transactionHash, setTransactionHash] = useState('');
   const [investmentAmount, setInvestmentAmount] = useState('');
   const [isVisible, setIsVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [investmentPlans, setInvestmentPlans] = useState([]);
+  const [carbonPacks, setCarbonPacks] = useState([]);
+  const [activePlans, setActivePlans] = useState([]); 
+  const [user,setUser]=useState()
+
+  // Try to retrieve user object from localStorage if present
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (user) {
+      try {
+        const parsedUser = JSON.parse(user);
+       setUser(parsedUser);  
+      } catch (e) {
+        console.error('Failed to parse user from localStorage', e);
+      }
+    }
+  }, []);
+
+  
   const [dashboardData, setDashboardData] = useState({
     userStats: {
       totalInvestment: 1250,
@@ -45,627 +60,218 @@ const Dashboard = () => {
       greenBonus: 3.2,
       totalEarnings: 89.7,
       userId: 'ABC123'
-    },
-    activePlans: [
-      { 
-        name: 'Eco Pro', 
-        amount: 500, 
-        startDate: '2024-01-15', 
-        dailyROI: 6.5, 
-        progress: 65,
-        endDate: '2024-04-14',
-        estimatedReturn: 900
-      }
-    ]
+    }
   });
 
   useEffect(() => {
+
     setIsVisible(true);
+    fetchPlansData();
+    fetchActiveInvestments();
   }, []);
 
-  const investmentPlans = [
-    {
-      name: 'Eco Starter',
-      minAmount: 10,
-      dailyROI: 1.0,
-      duration: '80 Days',
-      maxReturn: '1.8x',
-      color: 'from-emerald-400 to-green-500',
-      badge: 'Popular',
-      features: ['Basic Returns', '80 Days Term', '1.8x Max Return', 'Low Risk']
-    },
-    {
-      name: 'Eco Grow',
-      minAmount: 25,
-      dailyROI: 1.2,
-      duration: '85 Days',
-      maxReturn: '2.0x',
-      color: 'from-teal-400 to-emerald-500',
-      features: ['Enhanced ROI', '85 Days Term', '2.0x Max Return', 'Medium Risk']
-    },
-    {
-      name: 'Eco Pro',
-      minAmount: 50,
-      dailyROI: 1.3,
-      duration: '90 Days',
-      maxReturn: '2.2x',
-      color: 'from-green-500 to-emerald-600',
-      badge: 'Recommended',
-      features: ['Professional Tier', '90 Days Term', '2.2x Max Return', 'High Reward']
-    },
-    {
-      name: 'Eco Elite',
-      minAmount: 100,
-      dailyROI: 1.35,
-      duration: '95 Days',
-      maxReturn: '2.3x',
-      color: 'from-emerald-500 to-teal-600',
-      features: ['Elite Returns', '95 Days Term', '2.3x Max Return', 'Premium']
-    },
-    {
-      name: 'Eco Infinity',
-      minAmount: 500,
-      dailyROI: 1.4,
-      duration: '100 Days',
-      maxReturn: '2.5x',
-      color: 'from-teal-500 to-green-700',
-      badge: 'Premium',
-      features: ['Maximum Returns', '100 Days Term', '2.5x Max Return', 'VIP Access']
-    }
-  ];
-
-  const carbonPacks = [
-    {
-      name: 'Mini Pack',
-      price: 1.5,
-      credits: 0.1,
-      popular: false,
-      description: 'Perfect for starters',
-      icon: <IoIosLeaf className="w-5 h-5 text-emerald-500" />
-    },
-    {
-      name: 'Starter Pack',
-      price: 6,
-      credits: 0.5,
-      popular: true,
-      description: 'Most popular choice',
-      icon: <FaLeaf className="w-5 h-5 text-green-500" />
-    },
-    {
-      name: 'Standard Pack',
-      price: 12,
-      credits: 1.0,
-      popular: false,
-      description: 'Great value',
-      icon: <GiTreeRoots className="w-5 h-5 text-emerald-600" />
-    },
-    {
-      name: 'Bundle Pack',
-      price: 55,
-      credits: 5.0,
-      popular: false,
-      description: 'Maximum benefits',
-      icon: <GiPineTree className="w-5 h-5 text-green-600" />
-    }
-  ];
-
-  const StatsCard = ({ icon, title, value, subtitle, color, trend, delay }) => (
-    <div 
-      className={`bg-white/90 backdrop-blur-md rounded-2xl p-4 md:p-6 shadow-xl border border-emerald-100/50 hover:shadow-2xl transition-all duration-500 group hover:scale-[1.02] transform-gpu ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-      }`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex-1 min-w-0">
-          <p className="text-xs md:text-sm font-medium text-gray-600 truncate">{title}</p>
-          <p className="text-lg md:text-2xl font-bold text-gray-900 mt-1 md:mt-2 truncate">{value}</p>
-          <p className="text-xs text-gray-500 mt-1 truncate">{subtitle}</p>
-          {trend && (
-            <div className="flex items-center gap-1 mt-1 md:mt-2">
-              <FiTrendingUp className="w-3 h-3 text-green-500 flex-shrink-0" />
-              <span className="text-xs text-green-600 font-medium truncate">{trend}</span>
-            </div>
-          )}
-        </div>
-        <div className={`p-2 md:p-3 rounded-xl bg-gradient-to-br ${color} group-hover:scale-110 transition-transform duration-300 shadow-lg flex-shrink-0 ml-2 md:ml-4 relative overflow-hidden`}>
-          <div className="absolute inset-0 bg-white/20 transform -skew-x-12 translate-x-8 group-hover:translate-x-0 transition-transform duration-500"></div>
-          {icon}
-        </div>
-      </div>
-    </div>
-  );
-
-  const PlanCard = ({ plan, isActive, hasActivePlan, onInvest, delay }) => (
-    <div 
-      className={`relative bg-white/90 backdrop-blur-md rounded-2xl p-4 md:p-6 shadow-xl border-2 ${
-        isActive ? 'border-emerald-400 shadow-emerald-100/50' : 'border-emerald-100/50 hover:border-emerald-300'
-      } transition-all duration-500 group hover:shadow-2xl h-full flex flex-col transform-gpu ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-      }`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      {plan.badge && (
-        <div className="absolute -top-2 left-2 md:left-4 z-10">
-          <span className="px-2 md:px-3 py-1 bg-gradient-to-r from-amber-400 to-amber-500 text-white text-xs font-bold rounded-full shadow-lg">
-            {plan.badge}
-          </span>
-        </div>
-      )}
-
-      {isActive && (
-        <div className="absolute -top-2 right-2 md:right-4 z-10">
-          <span className="px-2 md:px-3 py-1 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs font-bold rounded-full shadow-lg flex items-center gap-1">
-            <FiZap className="w-3 h-3" />
-            Active
-          </span>
-        </div>
-      )}
-
-      <div className="text-center mb-4 md:mb-6 flex-shrink-0 relative">
-        <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-green-500 rounded-lg blur opacity-10 group-hover:opacity-20 transition duration-1000 group-hover:duration-200"></div>
-        <h3 className="font-bold text-gray-900 text-base md:text-lg relative">{plan.name}</h3>
-        <div className="w-8 md:w-12 h-1 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full mx-auto mt-1 md:mt-2 relative"></div>
-      </div>
+  const fetchPlansData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.get('/investment/get-plans');
+      const data = response.data;
       
-      <div className="space-y-1 mb-1 flex-1">
-        <div className="flex justify-between items-center p-1 rounded-lg hover:bg-emerald-50/50 transition-colors duration-300 bg-gradient-to-r from-gray-50 to-white">
-          <div className="flex items-center gap-2">
-            <FiDollarSign className="w-3 h-3 md:w-4 md:h-4 text-emerald-500" />
-            <span className="text-xs md:text-sm text-gray-600">Min Investment</span>
-          </div>
-          <span className="font-bold text-gray-900 text-xs md:text-base">${plan.minAmount}</span>
-        </div>
-        <div className="flex justify-between items-center p-1 rounded-lg hover:bg-emerald-50/50 transition-colors duration-300 bg-gradient-to-r from-gray-50 to-white">
-          <div className="flex items-center gap-2">
-            <FiTrendingUp className="w-3 h-3 md:w-4 md:h-4 text-green-500" />
-            <span className="text-xs md:text-sm text-gray-600">Daily ROI</span>
-          </div>
-          <span className="font-bold text-green-600 text-xs md:text-base">{plan.dailyROI}%</span>
-        </div>
-        <div className="flex justify-between items-center p-1 rounded-lg hover:bg-emerald-50/50 transition-colors duration-300 bg-gradient-to-r from-gray-50 to-white">
-          <div className="flex items-center gap-2">
-            <FiCalendar className="w-3 h-3 md:w-4 md:h-4 text-teal-500" />
-            <span className="text-xs md:text-sm text-gray-600">Duration</span>
-          </div>
-          <span className="font-semibold text-gray-900 text-xs md:text-base">{plan.duration}</span>
-        </div>
-        <div className="flex justify-between items-center p-1 mb-2 md:mb-4 rounded-lg hover:bg-emerald-50/50 transition-colors duration-300 bg-gradient-to-r from-gray-50 to-white">
-          <div className="flex items-center gap-2">
-            <FiAward className="w-3 h-3 md:w-4 md:h-4 text-amber-500" />
-            <span className="text-xs md:text-sm text-gray-600">Max Return</span>
-          </div>
-          <span className="font-bold text-emerald-600 text-xs md:text-base">{plan.maxReturn}</span>
-        </div>
-      </div>
+      if (data.success) {
+        const transformedInvestmentPlans = data.data.investmentPlans.map(plan => ({
+          id: plan._id,
+          name: plan.planName,
+          minAmount: plan.amount,
+          dailyROI: plan.dailyROI,
+          duration: `${plan.durationDays} Days`,
+          maxReturn: `${plan.finalReturn}x`,
+          color: getPlanColor(plan.planName),
+          badge: getPlanBadge(plan.planName),
+          features: getPlanFeatures(plan.planName),
+          status: plan.status
+        }));
 
-      <div className="space-y-1 mb-4 md:mb-6 flex-shrink-0">
-        {plan.features.map((feature, index) => (
-          <div key={index} className="flex items-center gap-1 md:gap-2 p-1 rounded-lg hover:bg-emerald-50/30 transition-colors duration-300">
-            <FiCheck className="w-3 h-3 md:w-4 md:h-4 text-green-500 flex-shrink-0" />
-            <span className="text-xs text-gray-600 truncate">{feature}</span>
-          </div>
-        ))}
-      </div>
+        const transformedCarbonPacks = data.data.carbonPacks.map(pack => ({
+          id: pack._id,
+          name: pack.packName,
+          price: pack.price,
+          credits: pack.carbonAmount,
+          popular: pack.packName === 'Starter',
+          description: getPackDescription(pack.packName),
+          icon: getPackIcon(pack.packName),
+          status: pack.status
+        }));
 
-      <button 
-        onClick={() => onInvest(plan)}
-        disabled={hasActivePlan && !isActive}
-        className={`w-full py-2 md:py-3 rounded-xl font-bold text-xs md:text-sm transition-all duration-300 mt-auto flex-shrink-0 relative overflow-hidden group ${
-          isActive 
-            ? 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border-2 border-emerald-200 cursor-not-allowed' 
-            : hasActivePlan && !isActive
-            ? 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 cursor-not-allowed'
-            : 'bg-gradient-to-r from-emerald-700 to-green-500 text-white hover:shadow-lg transform hover:scale-[1.02] shadow-md'
-        }`}
-      >
-        {!isActive && !hasActivePlan && (
-          <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-8 group-hover:translate-x-8 transition-transform duration-700"></div>
-        )}
-        <span className="relative flex items-center justify-center gap-1 md:gap-2">
-          {isActive ? (
-            <>
-              <FiCheck className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="truncate">Plan Active</span>
-            </>
-          ) : hasActivePlan && !isActive ? (
-            <>
-              <FiInfo className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="truncate">One Plan Limit</span>
-            </>
-          ) : (
-            <>
-              <span className="truncate">Invest Now</span>
-              <FiChevronRight className="w-3 h-3 md:w-4 md:h-4" />
-            </>
-          )}
-        </span>
-      </button>
-    </div>
-  );
-
-  const CarbonPackCard = ({ pack, onSelect, delay }) => (
-    <div 
-      className={`relative bg-white/90 backdrop-blur-md rounded-2xl p-4 md:p-6 border-2 border-emerald-100/50 hover:border-emerald-300 transition-all duration-500 cursor-pointer group hover:shadow-2xl h-full flex flex-col transform-gpu ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-      }`}
-      style={{ transitionDelay: `${delay}ms` }}
-      onClick={() => onSelect(pack)}
-    >
-      {pack.popular && (
-        <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
-          <span className="px-2 md:px-4 py-1 bg-gradient-to-r from-amber-400 to-amber-500 text-white text-xs font-bold rounded-full shadow-lg whitespace-nowrap">
-            MOST POPULAR
-          </span>
-        </div>
-      )}
-
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-400 to-green-500 rounded-2xl blur opacity-5 group-hover:opacity-10 transition duration-1000 group-hover:duration-200"></div>
-
-      <div className="text-center mb-3 md:mb-4 flex-shrink-0 relative">
-        <div className="flex justify-center mb-1 md:mb-2">
-          <div className="p-2 md:p-3 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl">
-            {pack.icon}
-          </div>
-        </div>
-        <h3 className="font-bold text-gray-900 text-base md:text-lg relative">{pack.name}</h3>
-        <p className="text-xs text-gray-500 mt-1 relative line-clamp-1">{pack.description}</p>
-      </div>
-
-      <div className="text-center mb-3 md:mb-4 flex-shrink-0 relative">
-        <div className="flex justify-center items-baseline gap-1">
-          <span className="text-lg md:text-2xl font-bold text-gray-900 relative">${pack.price}</span>
-          <span className="text-xs text-gray-500 relative">one-time</span>
-        </div>
-        <p className="text-xs text-gray-500 mt-1 relative">{pack.credits} tCO2 credits</p>
-      </div>
-
-      <div className="bg-gradient-to-br from-emerald-50/80 to-green-100/80 rounded-lg p-3 md:p-4 mb-3 md:mb-4 flex-1 flex flex-col items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/5 to-green-500/5 transform -skew-x-12 -translate-x-8 group-hover:translate-x-8 transition-transform duration-700"></div>
-        <div className="flex items-center justify-center gap-1 md:gap-2 relative mb-1 md:mb-2">
-          <GiTreeRoots className="w-4 h-4 md:w-5 md:h-5 text-emerald-600" />
-          <span className="font-semibold text-emerald-700 text-sm md:text-base">{pack.credits} Carbon Credits</span>
-        </div>
-        <p className="text-xs text-emerald-600/80 text-center">
-          Equivalent to planting {Math.round(pack.credits * 20)} trees
-        </p>
-      </div>
-
-      <button className="w-full py-2 md:py-3 rounded-xl font-bold text-xs md:text-sm transition-all duration-300 flex-shrink-0 bg-gradient-to-r from-emerald-700 to-green-500 text-white hover:shadow-lg hover:scale-[1.02] shadow-md relative overflow-hidden group">
-        <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-8 group-hover:translate-x-8 transition-transform duration-700"></div>
-        <span className="relative flex items-center justify-center gap-1 md:gap-2">
-          <span className="truncate">Select Pack</span>
-          <FiChevronRight className="w-3 h-3 md:w-4 md:h-4" />
-        </span>
-      </button>
-    </div>
-  );
-
-  const InvestmentPopup = () => {
-    if (!showInvestmentPopup || !selectedInvestmentPlan) return null;
-
-    const walletAddress = "0x742d35Cc6634C0532925a3b8D4B5A3B4d4F5F6E7";
-
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      console.log({
-        plan: selectedInvestmentPlan.name,
-        amount: investmentAmount || selectedInvestmentPlan.minAmount,
-        transactionHash: transactionHash
-      });
-      
-      setDashboardData(prev => ({
-        ...prev,
-        activePlans: [
-          ...prev.activePlans,
-          {
-            name: selectedInvestmentPlan.name,
-            amount: parseFloat(investmentAmount) || selectedInvestmentPlan.minAmount,
-            startDate: new Date().toISOString().split('T')[0],
-            dailyROI: selectedInvestmentPlan.dailyROI * (parseFloat(investmentAmount) || selectedInvestmentPlan.minAmount) / 100,
-            progress: 0,
-            endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            estimatedReturn: (parseFloat(investmentAmount) || selectedInvestmentPlan.minAmount) * 2.2
-          }
-        ],
-        userStats: {
-          ...prev.userStats,
-          totalInvestment: prev.userStats.totalInvestment + (parseFloat(investmentAmount) || selectedInvestmentPlan.minAmount)
-        }
-      }));
-      
-      setShowInvestmentPopup(false);
-      setTransactionHash('');
-      setInvestmentAmount('');
-    };
-
-    const handleAmountChange = (e) => {
-      const value = e.target.value;
-      if (value === '' || /^\d*\.?\d*$/.test(value)) {
-        setInvestmentAmount(value);
+        setInvestmentPlans(transformedInvestmentPlans);
+        setCarbonPacks(transformedCarbonPacks);
       }
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-        <div className="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto relative animate-scaleIn">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-green-100 rounded-2xl -z-10"></div>
-          
-          {/* Close Button */}
-          <button 
-            onClick={() => setShowInvestmentPopup(false)}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-300 bg-white rounded-full p-2 shadow-lg hover:shadow-xl hover:scale-110"
-          >
-            <FiX className="w-5 h-5" />
-          </button>
-
-          <div className="text-center mb-6">
-            <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <FiTrendingUp className="w-7 h-7 md:w-8 md:h-8 text-white" />
-            </div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
-              Invest in {selectedInvestmentPlan.name}
-            </h2>
-            <p className="text-gray-600 text-sm md:text-base">Complete your investment securely</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Plan Summary */}
-            <div className="p-4 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl border border-emerald-200">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <p className="text-xs text-gray-600">Daily ROI</p>
-                  <p className="font-bold text-emerald-700 text-sm md:text-base">{selectedInvestmentPlan.dailyROI}%</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-gray-600">Duration</p>
-                  <p className="font-bold text-emerald-700 text-sm md:text-base">{selectedInvestmentPlan.duration}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Amount Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Investment Amount (USD)
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                <input
-                  type="text"
-                  value={investmentAmount}
-                  onChange={handleAmountChange}
-                  placeholder={`Minimum: $${selectedInvestmentPlan.minAmount}`}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-base md:text-lg font-semibold transition-all duration-300"
-                  required
-                  min={selectedInvestmentPlan.minAmount}
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Minimum investment: ${selectedInvestmentPlan.minAmount}
-              </p>
-            </div>
-
-            {/* QR Code */}
-            <div className="text-center p-4 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl border border-emerald-200">
-              <p className="text-sm font-medium text-gray-700 mb-3">Scan to Pay</p>
-              <div className="bg-white p-4 rounded-lg border-2 border-emerald-200 inline-block shadow-lg">
-                <QRCodeSVG 
-                  value={walletAddress}
-                  size={120}
-                  level="M"
-                  includeMargin
-                />
-              </div>
-            </div>
-
-            {/* Wallet Address */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Wallet Address
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={walletAddress}
-                  readOnly
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-xs md:text-sm bg-gray-50 truncate font-mono transition-all duration-300"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(walletAddress);
-                    alert('Address copied to clipboard!');
-                  }}
-                  className="px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 flex items-center gap-2 transform hover:scale-105"
-                >
-                  <FiCopy className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Transaction Hash Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Transaction Hash
-              </label>
-              <input
-                type="text"
-                value={transactionHash}
-                onChange={(e) => setTransactionHash(e.target.value)}
-                placeholder="Enter your transaction hash"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all duration-300"
-                required
-              />
-            </div>
-
-            <div className="space-y-4">
-              <button
-                type="submit"
-                className="w-full py-3 md:py-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-bold hover:shadow-lg transition-all duration-300 text-base md:text-lg transform hover:scale-[1.02] relative overflow-hidden group"
-              >
-                <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-8 group-hover:translate-x-8 transition-transform duration-700"></div>
-                <span className="relative">Confirm Investment</span>
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => setShowInvestmentPopup(false)}
-                className="w-full py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl font-bold hover:shadow-lg transition-all duration-300 hover:scale-[1.02] text-sm md:text-base"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+      toast.error('Failed to load plans data');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const CarbonPopup = () => {
-    if (!showCarbonPopup || !selectedCarbonPack) return null;
-
-    const walletAddress = "0x8a3bD8c7C8e5F2a1E4f6C8d9b0A2c3E5f7a9B1d2";
-
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+  const fetchActiveInvestments = async () => {
+    try {
+      const response = await axiosInstance.get('/investment/get-active-invetment');
+      const data = response.data;
       
-      console.log({
-        pack: selectedCarbonPack.name,
-        amount: selectedCarbonPack.price,
-        credits: selectedCarbonPack.credits,
-        transactionHash: transactionHash
+      if (data.success) {
+        const transformedActivePlans = data.data.map(investment => ({
+          id: investment._id,
+          name: investment.planId.planName,
+          amount: investment.investedAmount,
+          startDate: new Date(investment.startDate).toLocaleDateString('en-CA'),
+          dailyROI: investment.currentDailyROI,
+          progress: calculateProgress(investment.startDate, investment.endDate),
+          endDate: new Date(investment.endDate).toLocaleDateString('en-CA'),
+          estimatedReturn: investment.investedAmount * investment.planId.finalReturn,
+          totalProfitGenerated: investment.totalProfitGenerated,
+          totalPaid: investment.totalPaid,
+          status: investment.status
+        }));
+        
+        setActivePlans(transformedActivePlans);
+      }
+    } catch (error) {
+      console.error('Error fetching active investments:', error);
+    }
+  };
+
+  const calculateProgress = (startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const now = new Date();
+    
+    const totalDuration = end.getTime() - start.getTime();
+    const elapsed = now.getTime() - start.getTime();
+    
+    const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+    return Math.round(progress);
+  };
+
+  const handleInvestSubmit = async (plan, amount, hash) => {
+    try {
+      const response = await axiosInstance.post('/investment/create-investment', {
+        planId: plan.id,
+        amount: parseFloat(amount),
+        txHash: hash
       });
+
+      const data = response.data;
       
-      setDashboardData(prev => ({
-        ...prev,
-        userStats: {
-          ...prev.userStats,
-          carbonCredits: prev.userStats.carbonCredits + selectedCarbonPack.credits
-        }
-      }));
+      if (response.status===201) {
+        toast.success('Investment successful!');
+        await fetchActiveInvestments();
+        setDashboardData(prev => ({
+          ...prev,
+          userStats: {
+            ...prev.userStats,
+            totalInvestment: prev.userStats.totalInvestment + parseFloat(amount)
+          }
+        }));
+        
+        return true;
+      } else {
+        toast.error(data.message || 'Investment failed');
+        return false;
+      }
+    } catch (error) {
+      console.error('Investment error:', error);
+      toast.error('Investment failed. Please try again.');
+      return false;
+    }
+  };
+
+  const handleCarbonPurchase = async (pack, hash) => {
+    try {
+      const response = await axiosInstance.post('/investment/credit-purchase', {
+        packId: pack.id,
+        txHash: hash
+      });
+
+      const data = response.data;
       
-      setShowCarbonPopup(false);
-      setTransactionHash('');
+      if (response.status===201) {
+        toast.success('Carbon credits purchased successfully!');
+        setDashboardData(prev => ({
+          ...prev,
+          userStats: {
+            ...prev.userStats,
+            carbonCredits: prev.userStats.carbonCredits + pack.credits
+          }
+        }));
+        
+        return true;
+      } else {
+        toast.error(data.message || 'Purchase failed');
+        return false;
+      }
+    } catch (error) {
+      console.error('Purchase error:', error);
+      toast.error('Purchase failed. Please try again.');
+      return false;
+    }
+  };
+
+  const getPlanColor = (planName) => {
+    const colors = {
+      'Eco Starter': 'from-emerald-400 to-green-500',
+      'Eco Grow': 'from-teal-400 to-emerald-500',
+      'Eco Pro': 'from-green-500 to-emerald-600',
+      'Eco Elite': 'from-emerald-500 to-teal-600',
+      'Eco Infinity': 'from-teal-500 to-green-700'
     };
+    return colors[planName] || 'from-emerald-400 to-green-500';
+  };
 
-    return (
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-        <div className="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full max-h-[90vh] overflow-y-auto relative animate-scaleIn">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-green-100 rounded-2xl -z-10"></div>
-          
-          {/* Close Button */}
-          <button 
-            onClick={() => setShowCarbonPopup(false)}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-300 bg-white rounded-full p-2 shadow-lg hover:shadow-xl hover:scale-110"
-          >
-            <FiX className="w-5 h-5" />
-          </button>
+  const getPlanBadge = (planName) => {
+    const badges = {
+      'Eco Starter': 'Popular',
+      'Eco Pro': 'Recommended',
+      'Eco Infinity': 'Premium'
+    };
+    return badges[planName] || null;
+  };
 
-          <div className="text-center mb-6">
-            <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-              {selectedCarbonPack.icon}
-            </div>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
-              {selectedCarbonPack.name}
-            </h2>
-            <p className="text-gray-600 text-sm md:text-base">{selectedCarbonPack.description}</p>
-            <div className="mt-4 p-4 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl border border-emerald-200">
-              <p className="text-base md:text-lg font-bold text-emerald-700">
-                ${selectedCarbonPack.price} • {selectedCarbonPack.credits} Carbon Credits
-              </p>
-              <p className="text-sm text-emerald-600 mt-1">
-                Equivalent to planting {Math.round(selectedCarbonPack.credits * 20)} trees
-              </p>
-            </div>
-          </div>
+  const getPlanFeatures = (planName) => {
+    const features = {
+      'Eco Starter': ['Basic Returns', '80 Days Term', '1.8x Max Return', 'Low Risk'],
+      'Eco Grow': ['Enhanced ROI', '85 Days Term', '2.0x Max Return', 'Medium Risk'],
+      'Eco Pro': ['Professional Tier', '90 Days Term', '2.2x Max Return', 'High Reward'],
+      'Eco Elite': ['Elite Returns', '95 Days Term', '2.3x Max Return', 'Premium'],
+      'Eco Infinity': ['Maximum Returns', '100 Days Term', '2.5x Max Return', 'VIP Access']
+    };
+    return features[planName] || ['Standard Features'];
+  };
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* QR Code */}
-            <div className="text-center p-4 bg-gradient-to-br from-emerald-50 to-green-100 rounded-xl border border-emerald-200">
-              <p className="text-sm font-medium text-gray-700 mb-3">Scan to Pay</p>
-              <div className="bg-white p-4 rounded-lg border-2 border-emerald-200 inline-block shadow-lg">
-                <QRCodeSVG 
-                  value={walletAddress}
-                  size={120}
-                  level="M"
-                  includeMargin
-                />
-              </div>
-            </div>
+  const getPackDescription = (packName) => {
+    const descriptions = {
+      'Mini': 'Perfect for starters',
+      'Starter': 'Most popular choice',
+      'Standard': 'Great value',
+      'Bundle': 'Maximum benefits'
+    };
+    return descriptions[packName] || 'Carbon offset pack';
+  };
 
-            {/* Wallet Address */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Payment Wallet
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={walletAddress}
-                  readOnly
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-xs md:text-sm bg-gray-50 truncate font-mono transition-all duration-300"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(walletAddress);
-                    alert('Address copied to clipboard!');
-                  }}
-                  className="px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 flex items-center gap-2 transform hover:scale-105"
-                >
-                  <FiCopy className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Transaction Hash Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Transaction Hash
-              </label>
-              <input
-                type="text"
-                value={transactionHash}
-                onChange={(e) => setTransactionHash(e.target.value)}
-                placeholder="Enter your transaction hash"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm transition-all duration-300"
-                required
-              />
-            </div>
-
-            <div className="space-y-4">
-              <button
-                type="submit"
-                className="w-full py-3 md:py-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-bold hover:shadow-lg transition-all duration-300 text-base md:text-lg transform hover:scale-[1.02] relative overflow-hidden group"
-              >
-                <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-8 group-hover:translate-x-8 transition-transform duration-700"></div>
-                <span className="relative">Purchase Carbon Credits</span>
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => setShowCarbonPopup(false)}
-                className="w-full py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl font-bold hover:shadow-lg transition-all duration-300 hover:scale-[1.02] text-sm md:text-base"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
+  const getPackIcon = (packName) => {
+    const icons = {
+      'Mini': <IoIosLeaf className="w-5 h-5 text-emerald-500" />,
+      'Starter': <FaLeaf className="w-5 h-5 text-green-500" />,
+      'Standard': <GiTreeRoots className="w-5 h-5 text-emerald-600" />,
+      'Bundle': <GiPineTree className="w-5 h-5 text-green-600" />
+    };
+    return icons[packName] || <FaLeaf className="w-5 h-5 text-green-500" />;
   };
 
   const handleInvest = (plan) => {
-    const hasActivePlan = dashboardData.activePlans.length > 0;
-    const isActive = dashboardData.activePlans.some(active => active.name === plan.name);
+    const hasActivePlan = activePlans.length > 0;
+    const isActive = activePlans.some(active => active.name === plan.name);
     
     if (hasActivePlan && !isActive) {
-      alert('You can only have one active investment plan at a time. Please complete your current plan before investing in another.');
+      toast.error('You can only have one active investment plan at a time. Please complete your current plan before investing in another.');
       return;
     }
     
@@ -680,7 +286,39 @@ const Dashboard = () => {
     setShowCarbonPopup(true);
   };
 
-  const hasActivePlan = dashboardData.activePlans.length > 0;
+  const handleShareReferral = async () => {
+    const referralUrl = `${window.location.origin}/signup?ref=${user.referralCode}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Join Eco Investment Platform",
+          text: "Register using my referral link and start your green journey:",
+          url: referralUrl,
+        });
+      } catch (error) {
+        // Fallback to copy if share fails or is cancelled
+        navigator.clipboard.writeText(referralUrl);
+        toast.success('Referral link copied to clipboard!');
+      }
+    } else {
+      navigator.clipboard.writeText(referralUrl);
+      toast.success('Referral link copied to clipboard!');
+    }
+  };
+
+  const hasActivePlan = activePlans.length > 0;
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50/30 to-teal-50/50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-emerald-600 font-medium">Loading plans...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50/30 to-teal-50/50 relative overflow-hidden">
@@ -724,6 +362,7 @@ const Dashboard = () => {
             trend="+5.2% this month"
             color="from-emerald-700 to-green-700"
             delay={100}
+            isVisible={isVisible}
           />
           <StatsCard
             icon={<FiTrendingUp className="w-5 h-5 md:w-6 md:h-6 text-white" />}
@@ -733,6 +372,7 @@ const Dashboard = () => {
             trend="+$0.25 today"
             color="from-green-700 to-emerald-700"
             delay={200}
+            isVisible={isVisible}
           />
           <StatsCard
             icon={<GiRecycle className="w-5 h-5 md:w-6 md:h-6 text-white" />}
@@ -742,6 +382,7 @@ const Dashboard = () => {
             trend="+2.1 this week"
             color="from-teal-700 to-emerald-600"
             delay={300}
+            isVisible={isVisible}
           />
           <StatsCard
             icon={<FiUsers className="w-5 h-5 md:w-6 md:h-6 text-white" />}
@@ -751,6 +392,7 @@ const Dashboard = () => {
             trend="3 active levels"
             color="from-amber-700 to-amber-600"
             delay={400}
+            isVisible={isVisible}
           />
         </div>
 
@@ -784,15 +426,16 @@ const Dashboard = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                   {investmentPlans.map((plan, index) => {
-                    const isActive = dashboardData.activePlans.some(active => active.name === plan.name);
+                    const isActive = activePlans.some(active => active.name === plan.name);
                     return (
                       <PlanCard
-                        key={index}
+                        key={plan.id}
                         plan={plan}
                         isActive={isActive}
                         hasActivePlan={hasActivePlan}
                         onInvest={handleInvest}
                         delay={600 + index * 100}
+                        isVisible={isVisible}
                       />
                     );
                   })}
@@ -818,10 +461,11 @@ const Dashboard = () => {
                 <div className="space-y-4 md:space-y-6">
                   {carbonPacks.map((pack, index) => (
                     <CarbonPackCard
-                      key={index}
+                      key={pack.id}
                       pack={pack}
                       onSelect={handleCarbonSelect}
                       delay={800 + index * 100}
+                      isVisible={isVisible}
                     />
                   ))}
                 </div>
@@ -829,7 +473,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Bottom Section - Active Plans with Referral Card */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 md:p-8 shadow-2xl border border-emerald-100/50 transform-gpu">
             <div className={`transition-all duration-700 delay-900 ${
               isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
@@ -840,13 +483,13 @@ const Dashboard = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Active Plans Progress</h2>
                     <span className="px-3 py-1 bg-gradient-to-r from-emerald-400 to-green-500 text-white text-xs font-bold rounded-full self-start sm:self-auto">
-                      {dashboardData.activePlans.length} Active
+                      {activePlans.length} Active
                     </span>
                   </div>
                   
-                  {dashboardData.activePlans.length > 0 ? (
+                  {activePlans.length > 0 ? (
                     <div className="space-y-4 md:space-y-6">
-                      {dashboardData.activePlans.map((plan, index) => (
+                      {activePlans.map((plan, index) => (
                         <div key={index} className="group transform hover:scale-[1.01] transition-transform duration-300">
                           <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-4 md:p-6 border border-emerald-200">
                             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
@@ -931,23 +574,22 @@ const Dashboard = () => {
                         <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">
                           {dashboardData.userStats.referralCount} Referrals
                         </span>
-                      </div>
-                      
+                      </div>                    
                       <div className="space-y-3 mb-4">
                         <div>
                           <p className="text-xs text-gray-500 mb-1">Your Referral Link</p>
                           <div className="flex items-center gap-2">
                             <div className="flex-1 px-3 py-2 bg-white border border-emerald-200 rounded-lg text-xs truncate font-mono">
-                            {`${window.location.origin}/signup?ref=${dashboardData.userStats.userId}`}
+                              {`${window.location.origin}/signup?ref=${user.referralCode}`}
                             </div>
                             <button
                               onClick={() => {
-                                navigator.clipboard.writeText(`${window.location.origin}/signup?ref=${dashboardData.userStats.userId}`);
+                                navigator.clipboard.writeText(`${window.location.origin}/signup?ref=${user.referralCode}`);
                                 toast.success('Referral link copied to clipboard!');
                               }}
                               className="p-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 flex items-center gap-1"
                             >
-                              <FiCopy className="w-3 h-3" />
+                              <FiShare className="w-3 h-3" />
                               <span className="text-xs font-semibold">Copy</span>
                             </button>
                           </div>
@@ -957,15 +599,15 @@ const Dashboard = () => {
                           <p className="mb-2">Share your referral link to earn:</p>
                           <ul className="space-y-1">
                             <li className="flex items-center gap-2">
-                              <FiCheck className="w-3 h-3 text-green-500 flex-shrink-0" />
+                              <FiTrendingUp className="w-3 h-3 text-green-500 flex-shrink-0" />
                               <span>10% from level 1 referrals</span>
                             </li>
                             <li className="flex items-center gap-2">
-                              <FiCheck className="w-3 h-3 text-green-500 flex-shrink-0" />
+                              <FiTrendingUp className="w-3 h-3 text-green-500 flex-shrink-0" />
                               <span>5% from level 2 referrals</span>
                             </li>
                             <li className="flex items-center gap-2">
-                              <FiCheck className="w-3 h-3 text-green-500 flex-shrink-0" />
+                              <FiTrendingUp className="w-3 h-3 text-green-500 flex-shrink-0" />
                               <span>2% from level 3 referrals</span>
                             </li>
                           </ul>
@@ -973,31 +615,13 @@ const Dashboard = () => {
                       </div>
                       
                       <button
-                        onClick={async () => {
-                          const referralUrl = `${window.location.origin}/signup?ref=${dashboardData.userStats.userId}`;
-                          if (navigator.share) {
-                            try {
-                              await navigator.share({
-                                title: "Join Eco Investment Platform",
-                                text: "Register using my referral link and start your green journey:",
-                                url: referralUrl,
-                              });
-                            } catch (error) {
-                              // optional: handle user cancel or error
-                            }
-                          } else {
-                            // fallback to copy to clipboard
-                            navigator.clipboard.writeText(referralUrl);
-                            alert('Referral link copied to clipboard!');
-                          }
-                        }}
+                        onClick={handleShareReferral}
                         className="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-bold hover:shadow-lg transition-all duration-300 hover:scale-[1.02] text-sm flex items-center justify-center gap-2"
                       >
                         <FiShare className="w-4 h-4" />
                         Share Referral Link
                       </button>
                     </div>
-
                   </div>
                 </div>
               </div>
@@ -1007,10 +631,26 @@ const Dashboard = () => {
       </div>
 
       {/* Investment Popup */}
-      <InvestmentPopup />
+      <InvestmentPopup 
+        showPopup={showInvestmentPopup}
+        setShowPopup={setShowInvestmentPopup}
+        selectedPlan={selectedInvestmentPlan}
+        investmentAmount={investmentAmount}
+        setInvestmentAmount={setInvestmentAmount}
+        transactionHash={transactionHash}
+        setTransactionHash={setTransactionHash}
+        handleInvestSubmit={handleInvestSubmit}
+      />
       
       {/* Carbon Popup */}
-      <CarbonPopup />
+      <CarbonPopup
+        showPopup={showCarbonPopup}
+        setShowPopup={setShowCarbonPopup}
+        selectedPack={selectedCarbonPack}
+        transactionHash={transactionHash}
+        setTransactionHash={setTransactionHash}
+        handleCarbonPurchase={handleCarbonPurchase}
+      />
 
       {/* Add custom animations */}
       <style jsx>{`
@@ -1053,12 +693,5 @@ const Dashboard = () => {
     </div>
   );
 };
-
-// Add missing FiShare icon
-const FiShare = ({ className }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-  </svg>
-);
 
 export default Dashboard;

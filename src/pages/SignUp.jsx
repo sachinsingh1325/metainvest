@@ -49,7 +49,7 @@ function SignUp() {
         email: formData.email,
         password: formData.password,
         mobileNumber: formData.mobileNumber,
-        referralCode: formData.referralCode, // Added referral code to API call
+        referredBy: formData.referralCode, // Added referral code to API call
       });
 
       // Assuming a successful response structure
