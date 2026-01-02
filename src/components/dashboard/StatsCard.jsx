@@ -15,7 +15,7 @@ const StatsCard = ({ icon, title, value, subtitle, color, trend, delay, isVisibl
         <p className="text-xs text-gray-500 mt-1 truncate">{subtitle}</p>
         {trend && (
           <div className="flex items-center gap-1 mt-1 md:mt-2">
-            <FiTrendingUp className="w-3 h-3 text-green-500 flex-shrink-0" />
+            {/* <FiTrendingUp className="w-3 h-3 text-green-500 flex-shrink-0" /> */}
             <span className="text-xs text-green-600 font-medium truncate">{trend}</span>
           </div>
         )}

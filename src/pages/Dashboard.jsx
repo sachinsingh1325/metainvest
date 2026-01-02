@@ -4,7 +4,8 @@ import {
   FiUsers, 
   FiInfo,
   FiShare,
-  FiDollarSign
+  FiDollarSign,
+  FiTrendingDown
 } from 'react-icons/fi';
 import { GiRecycle, GiTreeRoots, GiPineTree } from 'react-icons/gi';
 import { FaLeaf } from "react-icons/fa6";
@@ -27,48 +28,69 @@ const Dashboard = () => {
   const [investmentAmount, setInvestmentAmount] = useState('');
   const [isVisible, setIsVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
   const [investmentPlans, setInvestmentPlans] = useState([]);
   const [carbonPacks, setCarbonPacks] = useState([]);
   const [activePlans, setActivePlans] = useState([]); 
-  const [user,setUser]=useState()
+  const [user, setUser] = useState(null);
+
+  // Dashboard stats from backend
+  const [dashboardStats, setDashboardStats] = useState({
+    totalInvestment: 0,
+    latestDailyROIAmount: 0,
+    todayROITotalAmount: 0,
+    availableCarbon: 0,
+    carbonTrendPercentage: 0,
+    activeLevelsCount: 0,
+    referralCount: 0,
+    levelIncome: 0 // You'll need to add this to your backend API or calculate it
+  });
 
   // Try to retrieve user object from localStorage if present
   useEffect(() => {
-    const user = localStorage.getItem('user');
-    if (user) {
+    const userData = localStorage.getItem('user');
+    if (userData) {
       try {
-        const parsedUser = JSON.parse(user);
-       setUser(parsedUser);  
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);  
       } catch (e) {
         console.error('Failed to parse user from localStorage', e);
       }
     }
   }, []);
 
-  
-  const [dashboardData, setDashboardData] = useState({
-    userStats: {
-      totalInvestment: 1250,
-      activeDays: 45,
-      carbonCredits: 12.5,
-      referralCount: 8,
-      currentTier: 'Silver',
-      nextTier: 'Gold',
-      badge: 'Gold',
-      dailyROI: 7.25,
-      levelIncome: 0.52,
-      greenBonus: 3.2,
-      totalEarnings: 89.7,
-      userId: 'ABC123'
-    }
-  });
-
   useEffect(() => {
-
     setIsVisible(true);
+    fetchDashboardStats();
     fetchPlansData();
     fetchActiveInvestments();
   }, []);
+
+  const fetchDashboardStats = async () => {
+    setDashboardLoading(true);
+    try {
+      const response = await axiosInstance.get('/investment/dashboard-stats');
+      const data = response.data;
+      
+      if (data.success) {
+        setDashboardStats({
+          totalInvestment: data.totalInvestment || 0,
+          latestDailyROIAmount: data.latestDailyROIAmount || 0,
+          todayROITotalAmount: data.todayROITotalAmount || 0,
+          availableCarbon: data.availableCarbon || 0,
+          carbonTrendPercentage: data.carbonTrendPercentage || 0,
+          activeLevelsCount: data.activeLevelsCount || 0,
+          referralCount: data.referralCount || 0,
+          levelIncome: 0 // You can add this to your backend or calculate from referrals
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      toast.error('Failed to load dashboard statistics');
+    } finally {
+      setDashboardLoading(false);
+    }
+  };
 
   const fetchPlansData = async () => {
     setIsLoading(true);
@@ -164,14 +186,7 @@ const Dashboard = () => {
       if (response.status===201) {
         toast.success('Investment successful!');
         await fetchActiveInvestments();
-        setDashboardData(prev => ({
-          ...prev,
-          userStats: {
-            ...prev.userStats,
-            totalInvestment: prev.userStats.totalInvestment + parseFloat(amount)
-          }
-        }));
-        
+        await fetchDashboardStats(); // Refresh dashboard stats
         return true;
       } else {
         toast.error(data.message || 'Investment failed');
@@ -195,14 +210,7 @@ const Dashboard = () => {
       
       if (response.status===201) {
         toast.success('Carbon credits purchased successfully!');
-        setDashboardData(prev => ({
-          ...prev,
-          userStats: {
-            ...prev.userStats,
-            carbonCredits: prev.userStats.carbonCredits + pack.credits
-          }
-        }));
-        
+        await fetchDashboardStats(); // Refresh dashboard stats
         return true;
       } else {
         toast.error(data.message || 'Purchase failed');
@@ -215,6 +223,7 @@ const Dashboard = () => {
     }
   };
 
+  // Helper functions for plan styling (keep these as they are)
   const getPlanColor = (planName) => {
     const colors = {
       'Eco Starter': 'from-emerald-400 to-green-500',
@@ -287,7 +296,7 @@ const Dashboard = () => {
   };
 
   const handleShareReferral = async () => {
-    const referralUrl = `${window.location.origin}/signup?ref=${user.referralCode}`;
+    const referralUrl = `${window.location.origin}/signup?ref=${user?.referralCode}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -308,21 +317,46 @@ const Dashboard = () => {
 
   const hasActivePlan = activePlans.length > 0;
 
-  // Loading state
-  if (isLoading) {
+  // Loading state for dashboard stats
+  if (dashboardLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50/30 to-teal-50/50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-emerald-600 font-medium">Loading plans...</p>
+          <p className="text-emerald-600 font-medium">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
+  // Calculate carbon trend icon and text
+  const getCarbonTrend = () => {
+    if (dashboardStats.carbonTrendPercentage > 0) {
+      return {
+        icon: <FiTrendingUp className="w-3 h-3 text-green-500" />,
+        text: `+${dashboardStats.carbonTrendPercentage}% this week`,
+        color: 'text-green-600'
+      };
+    } else if (dashboardStats.carbonTrendPercentage < 0) {
+      return {
+        icon: <FiTrendingDown className="w-3 h-3 text-red-500" />,
+        text: `${dashboardStats.carbonTrendPercentage}% this week`,
+        color: 'text-red-600'
+      };
+    } else {
+      return {
+        icon: null,
+        text: 'No change this week',
+        color: 'text-gray-600'
+      };
+    }
+  };
+
+  const carbonTrend = getCarbonTrend();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50/30 to-teal-50/50 relative overflow-hidden">
-      {/* Animated Background Elements */}
+      {/* Animated Background Elements (keep as is) */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-60 h-60 md:w-80 md:h-80 bg-emerald-200/20 rounded-full blur-3xl animate-float"></div>
         <div className="absolute -bottom-40 -left-40 w-60 h-60 md:w-80 md:h-80 bg-green-200/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
@@ -352,51 +386,67 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats Grid - Updated with actual backend data */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 md:mb-8">
+          {/* Total Investment Card - No trend shown */}
           <StatsCard
             icon={<FiDollarSign className="w-5 h-5 md:w-6 md:h-6 text-white" />}
             title="Total Investment"
-            value={`$${dashboardData.userStats.totalInvestment}`}
+            value={`$${dashboardStats.totalInvestment}`}
             subtitle="Active portfolio"
-            trend="+5.2% this month"
             color="from-emerald-700 to-green-700"
             delay={100}
             isVisible={isVisible}
+            showTrend={false} // Hide trend for this card
           />
+          
+          {/* Daily ROI Card */}
           <StatsCard
             icon={<FiTrendingUp className="w-5 h-5 md:w-6 md:h-6 text-white" />}
             title="Daily ROI"
-            value={`$${dashboardData.userStats.dailyROI}`}
+            value={`$${dashboardStats.latestDailyROIAmount}`}
             subtitle="Current earnings"
-            trend="+$0.25 today"
+            trend={`$${dashboardStats.todayROITotalAmount} today`}
             color="from-green-700 to-emerald-700"
             delay={200}
             isVisible={isVisible}
+            showTrend={true}
           />
+          
+          {/* Carbon Credits Card */}
           <StatsCard
             icon={<GiRecycle className="w-5 h-5 md:w-6 md:h-6 text-white" />}
             title="Carbon Credits"
-            value={dashboardData.userStats.carbonCredits}
-            subtitle="Tons recycled"
-            trend="+2.1 this week"
+            value={dashboardStats.availableCarbon}
+            subtitle="Tons available"
+            trend={
+              <div className="flex items-center gap-1">
+                {carbonTrend.icon}
+                <span className={carbonTrend.color}>
+                  {carbonTrend.text}
+                </span>
+              </div>
+            }
             color="from-teal-700 to-emerald-600"
             delay={300}
             isVisible={isVisible}
+            showTrend={true}
           />
+          
+          {/* Level Income Card */}
           <StatsCard
             icon={<FiUsers className="w-5 h-5 md:w-6 md:h-6 text-white" />}
-            title="Level Income"
-            value={`$${dashboardData.userStats.levelIncome}`}
+            title="Referral Income"
+            value={`$${dashboardStats.levelIncome}`}
             subtitle="From referrals"
-            trend="3 active levels"
+            trend={`${dashboardStats.activeLevelsCount} active levels`}
             color="from-amber-700 to-amber-600"
             delay={400}
             isVisible={isVisible}
+            showTrend={true}
           />
         </div>
 
-        {/* Main Content Grid */}
         <div className="space-y-6 md:space-y-8">
           {/* Investment Plans & Carbon Credits Side by Side */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
@@ -572,7 +622,7 @@ const Dashboard = () => {
                           <h3 className="font-semibold text-gray-900 text-lg">Referral Program</h3>
                         </div>
                         <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">
-                          {dashboardData.userStats.referralCount} Referrals
+                          {dashboardStats.referralCount} Referrals
                         </span>
                       </div>                    
                       <div className="space-y-3 mb-4">
@@ -628,6 +678,7 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+
       </div>
 
       {/* Investment Popup */}
